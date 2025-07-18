@@ -71,22 +71,54 @@ class _TaskListPageState extends State<TaskListPage> {
             command.description ?? 'Created via voice command',
             command.dateTime!,
           );
-          _showSnackBar('Task "${command.title}" created successfully!');
+          _showSnackBar('✅ Task "${command.title}" created successfully!');
+        } else if (command.title != null) {
+          // Create task without specific time
+          _taskCubit.addTask(
+            command.title!,
+            command.description ?? 'Created via voice command',
+            DateTime.now().add(const Duration(hours: 1)),
+          );
+          _showSnackBar('✅ Task "${command.title}" created for later!');
         }
         break;
       case CommandType.update:
         if (command.title != null) {
           // Find the task by title and update it
-          // This is a simplified implementation
-          _showSnackBar('Update command received for "${command.title}"');
+          final currentState = _taskCubit.state;
+          if (currentState is TasksLoaded) {
+            final taskToUpdate = currentState.tasks.firstWhere(
+              (task) => task.title.toLowerCase() == command.title!.toLowerCase(),
+              orElse: () => throw Exception('Task not found'),
+            );
+            
+            final updatedTask = taskToUpdate.copyWith(
+              dateTime: command.dateTime ?? taskToUpdate.dateTime,
+              description: command.description ?? taskToUpdate.description,
+            );
+            
+            _taskCubit.editTask(updatedTask);
+            _showSnackBar('✅ Task "${command.title}" updated successfully!');
+          }
         }
         break;
       case CommandType.delete:
         if (command.title != null) {
           // Find the task by title and delete it
-          // This is a simplified implementation
-          _showSnackBar('Delete command received for "${command.title}"');
+          final currentState = _taskCubit.state;
+          if (currentState is TasksLoaded) {
+            final taskToDelete = currentState.tasks.firstWhere(
+              (task) => task.title.toLowerCase() == command.title!.toLowerCase(),
+              orElse: () => throw Exception('Task not found'),
+            );
+            
+            _taskCubit.removeTask(taskToDelete.id);
+            _showSnackBar('✅ Task "${command.title}" deleted successfully!');
+          }
         }
+        break;
+      case CommandType.unknown:
+        _showSnackBar('❌ Could not understand the voice command. Please try again.');
         break;
     }
   }
@@ -95,16 +127,39 @@ class _TaskListPageState extends State<TaskListPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Voice Commands'),
-        content: const Text(
-          'This is a demo version with mock voice commands. '
-          'Tap the microphone button to simulate voice commands. '
-          'The app will cycle through predefined commands to demonstrate functionality.',
+        title: const Text('🎤 Voice Commands'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This is an enhanced demo with sophisticated voice command parsing!',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text('📝 Example Commands:'),
+            SizedBox(height: 8),
+            Text('• "Create a task titled \'Grocery Shopping\' at 5 PM on October 10"'),
+            Text('• "Delete the task \'Grocery Shopping\'"'),
+            Text('• "Create a task called \'Team Meeting\' tomorrow at 2:30 PM"'),
+            Text('• "Update the task \'Team Meeting\' to 3:00 PM"'),
+            Text('• "Add a new task \'Doctor Appointment\' at 10 AM today"'),
+            SizedBox(height: 16),
+            Text(
+              '🔧 Features:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text('• Natural language processing'),
+            Text('• Date/time extraction'),
+            Text('• Intent recognition'),
+            Text('• Task title extraction'),
+            Text('• Error handling & validation'),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: const Text('Got it!'),
           ),
         ],
       ),
@@ -135,7 +190,9 @@ class _TaskListPageState extends State<TaskListPage> {
                   if (state is VoiceCommandProcessed) {
                     _handleVoiceCommand(state.command);
                   } else if (state is VoiceError) {
-                    _showSnackBar('Voice command error: ${state.message}');
+                    _showSnackBar('❌ Voice command error: ${state.message}');
+                  } else if (state is VoiceCommandInvalid) {
+                    _showSnackBar('❌ Invalid command: ${state.reason}');
                   }
                 },
               ),
