@@ -6,45 +6,31 @@ abstract class VoiceDataSource {
 }
 
 class MockVoiceDataSourceImpl implements VoiceDataSource {
-  // Enhanced mock speech-to-text with more realistic commands
-  final List<String> _mockCommands = [
-    "Create a task titled 'Grocery Shopping' at 5 PM on October 10",
-    "Delete the task 'Grocery Shopping'",
-    "Create a task called 'Team Meeting' tomorrow at 2:30 PM",
-    "Update the task 'Team Meeting' to 3:00 PM",
-    "Add a new task 'Doctor Appointment' at 10 AM today",
-    "Remove the task 'Doctor Appointment'",
-    "Create task 'Gym Workout' at 6 PM",
-    "Update 'Gym Workout' to 7 PM tomorrow",
-    "Delete task 'Gym Workout'",
-    "Create a task titled 'Project Review' at 9 AM on December 15",
-    "Schedule 'Dinner with Friends' at 8 PM tonight",
-    "Cancel the task 'Dinner with Friends'",
-  ];
+  String? _currentText;
 
-  int _commandIndex = 0;
+  void setText(String text) {
+    _currentText = text;
+  }
 
   @override
   Future<String> speechToText() async {
-    // Simulate speech recognition delay
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Cycle through mock commands
-    final command = _mockCommands[_commandIndex % _mockCommands.length];
-    _commandIndex++;
-
-    return command;
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (_currentText != null) {
+      final text = _currentText!;
+      _currentText = null;
+      return text;
+    }
+    
+    return "Create a task called 'Test Task' at 3 PM today";
   }
 
   @override
   Future<VoiceCommand> parseVoiceCommand(String text) async {
-    // Simulate LLM processing delay
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Enhanced natural language parsing
     final lowerText = text.toLowerCase();
     
-    // Extract intent
     CommandType intent;
     if (_containsAny(lowerText, ['create', 'add', 'new', 'schedule'])) {
       intent = CommandType.create;
@@ -56,13 +42,8 @@ class MockVoiceDataSourceImpl implements VoiceDataSource {
       intent = CommandType.unknown;
     }
 
-    // Extract task title
     String? title = _extractTitle(text, intent);
-    
-    // Extract date and time
     DateTime? dateTime = _extractDateTime(text);
-    
-    // Extract description (optional)
     String? description = _extractDescription(text);
 
     return VoiceCommand(
@@ -80,10 +61,6 @@ class MockVoiceDataSourceImpl implements VoiceDataSource {
   }
 
   String? _extractTitle(String text, CommandType intent) {
-    // Simple title extraction using string operations
-    final lowerText = text.toLowerCase();
-    
-    // Look for quoted text
     final singleQuoteStart = text.indexOf("'");
     final doubleQuoteStart = text.indexOf('"');
     
@@ -106,93 +83,141 @@ class MockVoiceDataSourceImpl implements VoiceDataSource {
   }
 
   DateTime? _extractDateTime(String text) {
-    final now = DateTime.now();
-    final lowerText = text.toLowerCase();
+    try {
+      final now = DateTime.now();
+      final lowerText = text.toLowerCase();
 
-    // Extract time
-    int? hour;
-    int? minute = 0;
-    
-    // Match time patterns like "5 PM", "2:30 PM", "10 AM"
-    final timePatterns = [
-      RegExp(r'(\d{1,2}):(\d{2})\s*(am|pm)', caseSensitive: false),
-      RegExp(r'(\d{1,2})\s*(am|pm)', caseSensitive: false),
-    ];
-
-    for (final pattern in timePatterns) {
-      final match = pattern.firstMatch(lowerText);
-      if (match != null) {
-        hour = int.parse(match.group(1)!);
-        if (match.groupCount >= 2 && match.group(2) != null) {
-          minute = int.parse(match.group(2)!);
-        }
-        final period = match.group(match.groupCount)!.toLowerCase();
-        
-        // Convert to 24-hour format
-        if (period == 'pm' && hour != 12) {
-          hour += 12;
-        } else if (period == 'am' && hour == 12) {
-          hour = 0;
-        }
-        break;
-      }
-    }
-
-    if (hour == null) return null;
-
-    // Extract date
-    DateTime targetDate = now;
-    
-    if (lowerText.contains('today')) {
-      targetDate = now;
-    } else if (lowerText.contains('tomorrow')) {
-      targetDate = now.add(const Duration(days: 1));
-    } else if (lowerText.contains('tonight')) {
-      targetDate = now;
-    } else {
-      // Extract specific date patterns
-      final datePatterns = [
-        RegExp(r"on\s+(\w+)\s+(\d{1,2})", caseSensitive: false),
+      int? hour;
+      int? minute = 0;
+      
+      final timePatterns = [
+        RegExp(r'(\d{1,2}):(\d{2})\s*(am|pm)', caseSensitive: false),
+        RegExp(r'(\d{1,2})\s*(am|pm)', caseSensitive: false),
       ];
 
-      for (final pattern in datePatterns) {
+      for (final pattern in timePatterns) {
         final match = pattern.firstMatch(lowerText);
         if (match != null) {
-          final monthName = match.group(1)!.toLowerCase();
-          final day = int.parse(match.group(2)!);
-          
-          final monthMap = {
-            'january': 1, 'february': 2, 'march': 3, 'april': 4,
-            'may': 5, 'june': 6, 'july': 7, 'august': 8,
-            'september': 9, 'october': 10, 'november': 11, 'december': 12,
-          };
-
-          final month = monthMap[monthName];
-          if (month != null) {
-            final year = now.year;
-            // If the month has passed, assume next year
-            final targetYear = (month < now.month) ? year + 1 : year;
-            targetDate = DateTime(targetYear, month, day);
+          try {
+            final hourStr = match.group(1);
+            if (hourStr == null) continue;
+            
+            hour = int.parse(hourStr);
+            
+            if (pattern.pattern.contains(':') && match.groupCount >= 2) {
+              final minuteStr = match.group(2);
+              if (minuteStr != null) {
+                minute = int.parse(minuteStr);
+              }
+            }
+            
+            final periodGroup = match.group(match.groupCount);
+            if (periodGroup == null) continue;
+            
+            final period = periodGroup.toLowerCase();
+            
+            if (hour < 1 || hour > 12 || (minute ?? 0) < 0 || (minute ?? 0) > 59) {
+              continue;
+            }
+            
+            if (period == 'pm' && hour != 12) {
+              hour += 12;
+            } else if (period == 'am' && hour == 12) {
+              hour = 0;
+            }
             break;
+          } catch (e) {
+            continue;
           }
         }
       }
-    }
 
-    return DateTime(
-      targetDate.year,
-      targetDate.month,
-      targetDate.day,
-      hour!,
-      minute!,
-    );
+      if (hour == null) return null;
+
+      DateTime targetDate = now;
+      
+      if (lowerText.contains('today')) {
+        targetDate = now;
+      } else if (lowerText.contains('tomorrow')) {
+        targetDate = now.add(const Duration(days: 1));
+      } else if (lowerText.contains('tonight')) {
+        targetDate = now;
+      } else {
+        final datePatterns = [
+          RegExp(r"on\s+(\w+)\s+(\d{1,2})", caseSensitive: false),
+        ];
+
+        for (final pattern in datePatterns) {
+          final match = pattern.firstMatch(lowerText);
+          if (match != null) {
+            try {
+              final monthNameGroup = match.group(1);
+              final dayStr = match.group(2);
+              
+              if (monthNameGroup == null || dayStr == null) {
+                continue;
+              }
+              
+              final monthName = monthNameGroup.toLowerCase();
+              final day = int.parse(dayStr);
+              
+              if (day < 1 || day > 31) {
+                continue;
+              }
+              
+              final monthMap = {
+                'january': 1, 'february': 2, 'march': 3, 'april': 4,
+                'may': 5, 'june': 6, 'july': 7, 'august': 8,
+                'september': 9, 'october': 10, 'november': 11, 'december': 12,
+              };
+
+              final month = monthMap[monthName];
+              if (month != null) {
+                final year = now.year;
+                final targetYear = (month < now.month) ? year + 1 : year;
+                
+                try {
+                  targetDate = DateTime(targetYear, month, day);
+                  if (targetDate.month != month || targetDate.day != day) {
+                    continue;
+                  }
+                  break;
+                } catch (e) {
+                  continue;
+                }
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+        }
+      }
+
+      try {
+        final result = DateTime(
+          targetDate.year,
+          targetDate.month,
+          targetDate.day,
+          hour!,
+          minute!,
+        );
+        
+        if (result.hour != hour || result.minute != (minute ?? 0)) {
+          return null;
+        }
+        
+        return result;
+      } catch (e) {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
   }
 
   String? _extractDescription(String text) {
-    // Simple description extraction - could be enhanced
     if (text.toLowerCase().contains('description') || 
         text.toLowerCase().contains('details')) {
-      // Extract text after "description" or "details"
       final patterns = [
         RegExp(r"description\s*:\s*(.+)", caseSensitive: false),
         RegExp(r"details\s*:\s*(.+)", caseSensitive: false),

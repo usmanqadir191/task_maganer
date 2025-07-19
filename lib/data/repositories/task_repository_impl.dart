@@ -23,6 +23,10 @@ class TaskRepositoryImpl implements TaskRepository {
       dateTime: task.dateTime,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
+      priority: task.priority,
+      status: task.status,
+      category: task.category,
+      isCompleted: task.isCompleted,
     );
     return await localDataSource.createTask(taskModel);
   }
@@ -36,6 +40,10 @@ class TaskRepositoryImpl implements TaskRepository {
       dateTime: task.dateTime,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
+      priority: task.priority,
+      status: task.status,
+      category: task.category,
+      isCompleted: task.isCompleted,
     );
     return await localDataSource.updateTask(taskModel);
   }

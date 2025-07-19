@@ -6,8 +6,21 @@ class ProcessVoiceCommand {
 
   ProcessVoiceCommand(this.repository);
 
-  Future<VoiceCommand> call() async {
-    final text = await repository.speechToText();
-    return await repository.parseVoiceCommand(text);
+  Future<VoiceCommand> call([String? text]) async {
+    try {
+      String commandText;
+      if (text != null) {
+        commandText = text;
+      } else {
+        commandText = await repository.speechToText();
+      }
+      return await repository.parseVoiceCommand(commandText);
+    } catch (e) {
+      return VoiceCommand(
+        type: CommandType.unknown,
+        originalText: 'Error processing command',
+        confidence: 0.0,
+      );
+    }
   }
 } 

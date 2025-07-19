@@ -9,6 +9,8 @@ class VoiceCommandHelper {
         return 'Updating task: ${command.title}';
       case CommandType.delete:
         return 'Deleting task: ${command.title}';
+      case CommandType.unknown:
+        throw UnimplementedError();
     }
   }
 
@@ -38,6 +40,8 @@ Delete Tasks:
         return command.title != null;
       case CommandType.delete:
         return command.title != null;
+      case CommandType.unknown:
+        throw UnimplementedError();
     }
   }
 } 
