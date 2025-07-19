@@ -8,15 +8,9 @@ class ProcessVoiceCommand {
 
   Future<VoiceCommand> call([String? text]) async {
     try {
-      String commandText;
-      if (text != null) {
-        commandText = text;
-      } else {
-        commandText = await repository.speechToText();
-      }
-      return await repository.parseVoiceCommand(commandText);
+      return await repository.processVoiceCommand(text);
     } catch (e) {
-      return VoiceCommand(
+      return const VoiceCommand(
         type: CommandType.unknown,
         originalText: 'Error processing command',
         confidence: 0.0,

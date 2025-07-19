@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/voice_command.dart';
 import '../../domain/usecases/process_voice_command.dart' as process_voice;
 import 'voice_states.dart';
 

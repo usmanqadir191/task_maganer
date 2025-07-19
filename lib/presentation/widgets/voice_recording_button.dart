@@ -121,13 +121,6 @@ class _VoiceRecordingButtonState extends State<VoiceRecordingButton>
     widget.onRecordingCancel?.call();
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    String minutes = twoDigits(duration.inMinutes.remainder(60));
-    String seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

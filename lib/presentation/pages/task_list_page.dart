@@ -8,7 +8,6 @@ import '../cubits/voice_states.dart';
 import '../widgets/task_card.dart';
 import '../widgets/task_dialog.dart';
 import '../widgets/voice_recording_button.dart';
-import '../widgets/voice_recording_overlay.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/voice_command.dart';
 
@@ -143,6 +142,59 @@ class _TaskListPageState extends State<TaskListPage> {
     );
   }
 
+  void _showVoiceCommandDialog() {
+    final textController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Test Voice Commands with AI'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter a voice command to test Gemini AI processing:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: textController,
+              decoration: const InputDecoration(
+                hintText: 'e.g., Create a meeting at 3 PM today',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            const Text('Example Commands:'),
+            const SizedBox(height: 8),
+            const Text('• "Create a task titled \'Grocery Shopping\' at 5 PM on October 10"'),
+            const Text('• "Delete the task \'Grocery Shopping\'"'),
+            const Text('• "Create a task called \'Team Meeting\' tomorrow at 2:30 PM"'),
+            const Text('• "Update the task \'Team Meeting\' to 3:00 PM"'),
+            const Text('• "Add a new task \'Doctor Appointment\' at 10 AM today"'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (textController.text.trim().isNotEmpty) {
+                Navigator.of(context).pop();
+                _voiceCubit.processTextCommand(textController.text.trim());
+              }
+            },
+            child: const Text('Process with AI'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<TaskCubit>.value(
@@ -157,16 +209,14 @@ class _TaskListPageState extends State<TaskListPage> {
           floatingActionButton: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              BlocBuilder<VoiceCubit, VoiceState>(
-                bloc: _voiceCubit,
-                builder: (context, voiceState) {
-                  return VoiceRecordingButton(
-                    onRecordingStart: () => _voiceCubit.startRecording(),
-                    onRecordingStop: () => _voiceCubit.stopRecording(),
-                    onRecordingCancel: () => _voiceCubit.cancelRecording(),
-                    isRecording: voiceState is VoiceRecording,
-                  );
-                },
+              FloatingActionButton(
+                heroTag: 'voice',
+                onPressed: _showVoiceCommandDialog,
+                backgroundColor: Colors.orange,
+                child: const Icon(
+                  Icons.mic,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 16),
               FloatingActionButton(
@@ -350,15 +400,7 @@ class _TaskListPageState extends State<TaskListPage> {
                   },
                 ),
               ),
-              BlocBuilder<VoiceCubit, VoiceState>(
-                bloc: _voiceCubit,
-                builder: (context, voiceState) {
-                  return VoiceRecordingOverlay(
-                    isVisible: voiceState is VoiceRecording,
-                    onCancel: () => _voiceCubit.cancelRecording(),
-                  );
-                },
-              ),
+
             ],
           ),
         ),

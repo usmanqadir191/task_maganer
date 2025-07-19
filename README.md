@@ -1,184 +1,188 @@
-# Task Manager App
+# 🎤 Voice-Powered Task Manager with Gemini AI
 
-A Flutter mobile application built with Clean Architecture, featuring voice command functionality for task management.
+A Flutter task management app with **WhatsApp-style voice recording** and **Google Gemini AI** integration for natural language task processing.
 
-## Features
+## ✨ Features
 
-- **Clean Architecture**: Organized into Presentation, Domain, and Data layers
-- **State Management**: Uses Cubit (flutter_bloc) for reactive state management
-- **Voice Commands**: Mock voice command simulation with predefined commands
-- **Task Management**: Create, read, update, and delete tasks
-- **Chronological Sorting**: Tasks are automatically sorted by date and time
-- **Modern UI**: Material Design 3 with beautiful task cards
-- **Dependency Injection**: Uses get_it for service locator pattern
+### 🎯 **Voice Commands with AI**
+- **Press & Hold** microphone button to record
+- **Natural language processing** with Gemini AI
+- **Smart task extraction** from voice input
+- **Real-time speech-to-text** conversion
 
-## Architecture
+### 📝 **Task Management**
+- Create, update, delete tasks via voice
+- Set priorities, dates, and descriptions
+- Mark tasks as complete/incomplete
+- Beautiful, intuitive UI
 
-### Domain Layer
-- **Entities**: Core business objects (Task, VoiceCommand)
-- **Repositories**: Abstract interfaces for data access
-- **Use Cases**: Business logic implementation
+### 🎨 **Modern UI/UX**
+- WhatsApp-style voice recording interface
+- Smooth animations and haptic feedback
+- Professional design with Material Design 3
+- Real-time recording overlay
 
-### Data Layer
-- **Models**: Data transfer objects extending domain entities
-- **Data Sources**: Concrete implementations for data access
-- **Repository Implementations**: Bridge between domain and data layers
+## 🚀 Quick Start
 
-### Presentation Layer
-- **Cubits**: State management for UI
-- **Pages**: Main application screens
-- **Widgets**: Reusable UI components
-
-## Voice Commands (Demo Mode)
-
-The app currently runs in demo mode with mock voice commands. The microphone button cycles through predefined commands to demonstrate the functionality:
-
-### Create Task
-```
-"Create a task titled 'Team Meeting' at 8:50 PM"
-"Create a task titled 'Doctor Appointment' at 2:30 PM"
-"Create a task titled 'Gym Workout' at 6:00 PM"
-```
-
-### Update Task
-```
-"Update the task 'Team Meeting' to 7:50 PM"
-```
-
-### Delete Task
-```
-"Delete the task 'Team Meeting'"
-```
-
-**Note**: Real speech-to-text functionality was temporarily disabled due to Android NDK compatibility issues. The mock implementation demonstrates the complete voice command workflow.
-
-## Getting Started
-
-### Prerequisites
-- Flutter SDK (3.7.2 or higher)
-- Dart SDK
-- Android Studio / VS Code
-- Android device or emulator
-
-### Installation
-
-1. Clone the repository:
+### 1. **Clone & Setup**
 ```bash
 git clone <repository-url>
 cd task_manager_app
-```
-
-2. Install dependencies:
-```bash
 flutter pub get
 ```
 
-3. Run the app:
+### 2. **Get Gemini API Key**
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Copy the key
+
+### 3. **Configure API Key**
+Open `lib/core/config/gemini_config.dart` and replace:
+```dart
+static const String apiKey = 'YOUR_GEMINI_API_KEY_HERE';
+```
+with your actual API key.
+
+### 4. **Run the App**
 ```bash
 flutter run
 ```
 
-### Permissions
+## 🎤 How to Use Voice Commands
 
-The app requires the following permissions:
-- **RECORD_AUDIO**: For voice command functionality
-- **INTERNET**: For future API integrations
+### **Basic Commands**
+- **"Create a meeting at 3 PM today"**
+- **"Add a task called grocery shopping"**
+- **"Delete the meeting task"**
+- **"Update meeting to 4 PM"**
 
-## Dependencies
+### **Advanced Commands**
+- **"Create a high priority task for tomorrow"**
+- **"Add a task called doctor appointment at 10 AM on Friday"**
+- **"Mark grocery shopping as complete"**
+- **"Update the meeting description to team sync"**
 
-### Core Dependencies
-- `flutter_bloc`: State management
-- `get_it`: Dependency injection
-- `speech_to_text`: Voice recognition
-- `intl`: Date and time formatting
-- `equatable`: Value equality
+## 🏗️ Architecture
 
-### Development Dependencies
-- `flutter_lints`: Code quality and style
-
-## Project Structure
-
+### **Clean Architecture**
 ```
 lib/
 ├── core/
-│   └── di/
-│       └── injection_container.dart
+│   ├── config/          # Configuration files
+│   ├── di/             # Dependency injection
+│   └── services/       # External services (Gemini)
 ├── data/
-│   ├── datasources/
-│   │   ├── task_local_data_source.dart
-│   │   └── voice_data_source.dart
-│   ├── models/
-│   │   └── task_model.dart
-│   └── repositories/
-│       ├── task_repository_impl.dart
-│       └── voice_repository_impl.dart
+│   ├── datasources/    # Data sources (local, voice)
+│   ├── models/         # Data models
+│   └── repositories/   # Repository implementations
 ├── domain/
-│   ├── entities/
-│   │   ├── task.dart
-│   │   └── voice_command.dart
-│   ├── repositories/
-│   │   ├── task_repository.dart
-│   │   └── voice_repository.dart
-│   └── usecases/
-│       ├── create_task.dart
-│       ├── delete_task.dart
-│       ├── get_all_tasks.dart
-│       ├── process_voice_command.dart
-│       └── update_task.dart
-├── presentation/
-│   ├── cubits/
-│   │   ├── task_cubit_simple.dart
-│   │   └── voice_cubit_simple.dart
-│   ├── pages/
-│   │   └── task_list_page.dart
-│   └── widgets/
-│       ├── task_card.dart
-│       └── task_dialog.dart
-└── main.dart
+│   ├── entities/       # Business entities
+│   ├── repositories/   # Repository interfaces
+│   └── usecases/       # Business logic
+└── presentation/
+    ├── cubits/         # State management
+    ├── pages/          # UI pages
+    └── widgets/        # Reusable widgets
 ```
 
-## Usage
+### **Key Components**
 
-### Adding Tasks
-1. Tap the "+" floating action button
-2. Fill in the task details (title, description, date/time)
-3. Tap "Add" to create the task
+#### **Gemini Service** (`lib/core/services/gemini_service.dart`)
+- Processes voice commands with AI
+- Extracts task information from natural language
+- Returns structured JSON responses
 
-### Editing Tasks
-1. Tap the edit icon on any task card
-2. Modify the task details
-3. Tap "Save" to update the task
+#### **Voice Data Source** (`lib/data/datasources/voice_data_source_real.dart`)
+- Handles speech-to-text conversion
+- Manages microphone permissions
+- Integrates with Gemini service
 
-### Deleting Tasks
-1. Tap the delete icon on any task card
-2. Confirm the deletion in the dialog
+#### **Voice Recording UI** (`lib/presentation/widgets/voice_recording_button.dart`)
+- WhatsApp-style press-and-hold interface
+- Visual feedback and animations
+- Haptic feedback for better UX
 
-### Voice Commands
-1. Tap the microphone floating action button
-2. Speak your command clearly
-3. The app will process and execute the command
+## 🔧 Technical Details
 
-## Mock LLM Integration
+### **Dependencies**
+```yaml
+dependencies:
+  flutter_bloc: ^8.1.3          # State management
+  google_generative_ai: ^0.2.3  # Gemini AI integration
+  speech_to_text: ^6.6.0        # Speech recognition
+  permission_handler: ^11.1.0   # Permission management
+  get_it: ^7.6.4               # Dependency injection
+  equatable: ^2.0.5            # Value equality
+```
 
-The app includes a mock LLM service that processes voice commands. In a production environment, this would be replaced with a real LLM API (e.g., OpenAI GPT, Google Gemini).
+### **State Management**
+- **Bloc/Cubit** for reactive state management
+- **Separate state files** for better organization
+- **Loading states** for smooth UX
 
-### Command Processing
-- **Speech-to-Text**: Converts voice input to text
-- **Command Parsing**: Extracts intent and parameters
-- **Task Operations**: Executes the appropriate task action
+### **Voice Processing Flow**
+1. **User presses** microphone button
+2. **Speech-to-text** converts voice to text
+3. **Gemini AI** processes the text command
+4. **Structured data** extracted (action, title, date, etc.)
+5. **Task operation** executed based on command
 
-## Future Enhancements
+## 🎯 Voice Command Examples
 
-- [ ] Real LLM API integration
-- [ ] Cloud storage for tasks
-- [ ] Task categories and tags
-- [ ] Reminder notifications
-- [ ] Task sharing
-- [ ] Offline support
-- [ ] Dark theme
-- [ ] Task templates
+### **Creating Tasks**
+```
+"Create a meeting at 3 PM today"
+"Add a task called grocery shopping"
+"Create a high priority task for tomorrow"
+"Add doctor appointment at 10 AM on Friday"
+```
 
-## Contributing
+### **Updating Tasks**
+```
+"Update meeting to 4 PM"
+"Change grocery shopping to tomorrow"
+"Update the meeting description"
+"Mark task as high priority"
+```
+
+### **Deleting Tasks**
+```
+"Delete the meeting task"
+"Remove grocery shopping"
+"Cancel the doctor appointment"
+```
+
+## 🔒 Permissions
+
+The app requires:
+- **Microphone access** for voice recording
+- **Internet access** for Gemini AI API calls
+
+## 🐛 Troubleshooting
+
+### **Voice Not Working**
+1. Check microphone permissions
+2. Ensure internet connection
+3. Verify Gemini API key is configured
+
+### **AI Not Responding**
+1. Check API key in `gemini_config.dart`
+2. Verify internet connection
+3. Check API quota limits
+
+### **App Crashes**
+1. Run `flutter clean && flutter pub get`
+2. Check device compatibility
+3. Verify all permissions are granted
+
+## 📱 Platform Support
+
+- ✅ **Android** (API 21+)
+- ✅ **iOS** (iOS 11+)
+- ⚠️ **Web** (Limited voice support)
+- ⚠️ **Desktop** (Limited voice support)
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -186,12 +190,16 @@ The app includes a mock LLM service that processes voice commands. In a producti
 4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Flutter team for the amazing framework
-- BLoC pattern for state management
-- Clean Architecture principles by Robert C. Martin
+- **Google Gemini AI** for natural language processing
+- **Flutter team** for the amazing framework
+- **Speech-to-text plugin** for voice recognition
+
+---
+
+**Made with ❤️ and Flutter**
